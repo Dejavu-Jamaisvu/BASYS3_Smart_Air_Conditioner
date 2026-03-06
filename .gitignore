@@ -1,0 +1,40 @@
+# Vivado generated files
+*.jou
+*.log
+*.pb
+*.rpx
+*.rpt
+*.dcp
+*.bit
+*.ltx
+*.wdb
+*.wcfg
+*.xpr.backup
+
+# Temporary files
+.Xil/
+
+# Synthesis and implementation runs
+.runs/
+
+# Hardware handoff
+.hw/
+
+# Simulation files
+.sim/
+
+# IP cores
+.ip_user_files/
+
+# Project file (exclude to keep only source code)
+*.xpr
+
+# Other temporary files
+*.backup.*
+*.tmp
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+Thumbs.db
