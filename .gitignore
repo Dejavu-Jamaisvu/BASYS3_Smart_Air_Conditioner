@@ -27,7 +27,10 @@
 .ip_user_files/
 
 # Project file (exclude to keep only source code)
-*.xpr
+#*.xpr
+
+# Cache files
+.cache/
 
 # Other temporary files
 *.backup.*
