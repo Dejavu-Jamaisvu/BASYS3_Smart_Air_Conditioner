@@ -10,6 +10,9 @@
 *.wdb
 *.wcfg
 *.xpr.backup
+*.wdf
+*.xml
+*.wpc
 
 # Temporary files
 .Xil/
