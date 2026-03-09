@@ -41,6 +41,7 @@ module top(
     wire [7:0] w_humidity;
     wire [7:0] w_temp;
     wire w_dht_valid;
+    wire w_dht_error;    // <--- 이 줄을 추가해야 에러 없이 컴파일됩니다!
 
     wire w_tick_1ms;
     wire w_tick_50ms;
@@ -124,55 +125,65 @@ module top(
         .dht_mode(w_dht_mode)
     );
 
-    // DHT11 20-second periodic trigger
-    reg [4:0] count_20s;
-    reg tick_20s_reg;
+    // 온습도 측정 주기를 정의
+    parameter UPDATE_PERIOD = 4'd10; 
+
+    reg [3:0] interval_cnt;   // 주기를 카운트하는 변수
+    reg trigger_update;       // 센서 및 전송 로직을 깨우는 신호
 
     always @(posedge clk or posedge reset) begin
         if (reset) begin
-            count_20s <= 5'd19;  // immediate first measurement on first 1s tick
-            tick_20s_reg <= 1'b0;
+            // 리셋 직후 첫 1초 틱에서 바로 작동하도록 설정
+            interval_cnt <= UPDATE_PERIOD - 1; 
+            trigger_update <= 1'b0;
         end else if (w_tick_1s) begin
-            if (count_20s == 5'd19) begin
-                count_20s <= 5'd0;
-                tick_20s_reg <= 1'b1;
+            if (interval_cnt >= UPDATE_PERIOD - 1) begin
+                interval_cnt <= 4'd0;
+                trigger_update <= 1'b1; // 10초가 되면 트리거 발생
             end else begin
-                count_20s <= count_20s + 5'd1;
-                tick_20s_reg <= 1'b0;
+                interval_cnt <= interval_cnt + 4'd1;
+                trigger_update <= 1'b0;
             end
         end else begin
-            tick_20s_reg <= 1'b0;
+            trigger_update <= 1'b0; // w_tick_1s가 아닐 때는 항상 0 유지
         end
     end
+
 
     dht11_controller u_dht11_controller(
         .clk(clk),
         .reset(reset),
-        .start(tick_20s_reg),
+        .start(trigger_update),
         .dht_data(dht_data),
         .humidity(w_humidity),
         .temperature(w_temp),
-        .data_valid(w_dht_valid)
+        .data_valid(w_dht_valid),
+        .error(w_dht_error)  // [수정] 에러 신호 연결
     );
 
-    // Send DHT data through UART when a new sample arrives.
-    reg dht_valid_prev;
+    // UART 트리거 로직 수정
+    reg dht_valid_prev, dht_error_prev;
     wire w_uart_trigger;
 
     always @(posedge clk or posedge reset) begin
-        if (reset)
+        if (reset) begin
             dht_valid_prev <= 1'b0;
-        else
+            dht_error_prev <= 1'b0;
+        end else begin
             dht_valid_prev <= w_dht_valid;
+            dht_error_prev <= w_dht_error;
+        end
     end
 
-    assign w_uart_trigger = (w_dht_valid && !dht_valid_prev);
+    // [수정] 데이터가 정상이거나(valid), 에러가 발생했을 때(error) 모두 UART 전송을 시작함
+    assign w_uart_trigger = (w_dht_valid && !dht_valid_prev) || (w_dht_error && !dht_error_prev);
 
     uart_controller u_uart_controller(
         .clk(clk),
         .reset(reset),
         .send_data({w_temp, w_humidity}),
         .start_trigger(w_uart_trigger),
+        .error_in(w_dht_error), // [추가] 에러 신호를 UART 컨트롤러에 전달
         .rx(RsRx),
         .tx(RsTx),
         .rx_data(w_rx_data),

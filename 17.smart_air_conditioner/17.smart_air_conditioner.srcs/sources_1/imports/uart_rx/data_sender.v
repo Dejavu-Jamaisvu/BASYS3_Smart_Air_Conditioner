@@ -4,17 +4,18 @@ module data_sender(
     input clk,
     input reset,
     input start_trigger,
-    input [15:0] send_data,  // [15:8]: Temp, [7:0]: Humi
+    input [15:0] send_data,
+    input error_in,          // [수정] DHT11 컨트롤러의 error 출력과 연결
     input tx_busy,
     input tx_done,
     output reg tx_start,
     output reg [7:0] tx_data
     );
 
-    // 상태를 25번까지 써야 하므로 5비트(0~31)가 꼭 필요합니다!
-    reg [4:0] state; 
+    // [수정] 상태 번호 100번대 사용을 위해 7비트로 확장
+    reg [6:0] state; 
 
-    // 10진수 분리 (ASCII)
+    // ASCII 변환 로직
     wire [7:0] humi_10 = (send_data[7:0] / 10) + 8'h30;
     wire [7:0] humi_1  = (send_data[7:0] % 10) + 8'h30;
     wire [7:0] temp_10 = (send_data[15:8] / 10) + 8'h30;
@@ -22,16 +23,20 @@ module data_sender(
 
     always @(posedge clk or posedge reset) begin
         if (reset) begin
-            tx_start <= 0;
-            tx_data <= 0;
-            state <= 0;
+            tx_start <= 0; tx_data <= 0; state <= 0;
         end else begin
             case (state)
-                0: begin // IDLE
+                0: begin 
                     if (start_trigger && !tx_busy) begin
-                        tx_data <= "H"; tx_start <= 1; state <= 1;
+                        if (error_in) begin // [수정] 에러 시 FAIL 출력 경로
+                            tx_data <= "F"; tx_start <= 1; state <= 100;
+                        end else begin      // 정상 시 데이터 출력 경로
+                            tx_data <= "H"; tx_start <= 1; state <= 1;
+                        end
                     end
                 end
+
+                // --- 정상 데이터 전송 (H:xx / T:xx) ---
                 1:  if (tx_done) state <= 2;
                 2:  begin tx_data <= ":"; tx_start <= 1; state <= 3; end
                 3:  if (tx_done) state <= 4;
@@ -52,17 +57,24 @@ module data_sender(
                 18: begin tx_data <= temp_10; tx_start <= 1; state <= 19; end
                 19: if (tx_done) state <= 20;
                 20: begin tx_data <= temp_1; tx_start <= 1; state <= 21; end
-                21: if (tx_done) state <= 22;
-                
-                // --- 줄바꿈 구간 ---
-                22: begin tx_data <= 8'h0D; tx_start <= 1; state <= 23; end // Carriage Return (\r)
+                21: if (tx_done) state <= 22; // 공통 줄바꿈으로 이동
+
+                // --- [수정] 에러 메시지 전송 (FAIL) ---
+                100: if (tx_done) state <= 101;
+                101: begin tx_data <= "A"; tx_start <= 1; state <= 102; end
+                102: if (tx_done) state <= 103;
+                103: begin tx_data <= "I"; tx_start <= 1; state <= 104; end
+                104: if (tx_done) state <= 105;
+                105: begin tx_data <= "L"; tx_start <= 1; state <= 22; end // 줄바꿈으로 이동
+
+                // --- 공통 줄바꿈 (\r\n) ---
+                22: begin tx_data <= 8'h0D; tx_start <= 1; state <= 23; end
                 23: if (tx_done) state <= 24;
-                24: begin tx_data <= 8'h0A; tx_start <= 1; state <= 25; end // Line Feed (\n)
-                25: if (tx_done) state <= 0; // 완료 후 대기상태로
+                24: begin tx_data <= 8'h0A; tx_start <= 1; state <= 25; end
+                25: if (tx_done) state <= 0;
 
                 default: state <= 0;
             endcase
-
             if (tx_start) tx_start <= 0;
         end
     end

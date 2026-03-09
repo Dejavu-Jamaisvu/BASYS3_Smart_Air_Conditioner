@@ -5,6 +5,7 @@ module uart_controller(
     input reset,
     input [15:0] send_data,
     input start_trigger,  // 바뀔때마다 변경되도록
+    input error_in,          // 에러 체크
     input rx,
     output tx,
     output [7:0] rx_data,
@@ -32,6 +33,7 @@ module uart_controller(
         // .start_trigger(w_tick_1Hz),
         .start_trigger(start_trigger),
         .send_data(send_data),   // 1 byte
+        .error_in(error_in),  // <--- 여기도 추가해서 전달해줘야 합니다.
         .tx_busy(w_tx_busy),
         .tx_done(w_tx_done),
         .tx_start(w_tx_start),

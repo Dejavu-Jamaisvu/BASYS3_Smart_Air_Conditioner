@@ -11,9 +11,9 @@ echo "Please update the PATH and LD_LIBRARY_PATH variables below, before executi
 exit
 
 if [ -z "$PATH" ]; then
-  PATH=D:/Xilinx/Vitis/2021.1/bin;D:/Xilinx/Vivado/2021.1/ids_lite/ISE/bin/nt64;D:/Xilinx/Vivado/2021.1/ids_lite/ISE/lib/nt64:D:/Xilinx/Vivado/2021.1/bin
+  PATH=D:/Xlinx/Vitis/2021.1/bin;D:/Xlinx/Vivado/2021.1/ids_lite/ISE/bin/nt64;D:/Xlinx/Vivado/2021.1/ids_lite/ISE/lib/nt64:D:/Xlinx/Vivado/2021.1/bin
 else
-  PATH=D:/Xilinx/Vitis/2021.1/bin;D:/Xilinx/Vivado/2021.1/ids_lite/ISE/bin/nt64;D:/Xilinx/Vivado/2021.1/ids_lite/ISE/lib/nt64:D:/Xilinx/Vivado/2021.1/bin:$PATH
+  PATH=D:/Xlinx/Vitis/2021.1/bin;D:/Xlinx/Vivado/2021.1/ids_lite/ISE/bin/nt64;D:/Xlinx/Vivado/2021.1/ids_lite/ISE/lib/nt64:D:/Xlinx/Vivado/2021.1/bin:$PATH
 fi
 export PATH
 
@@ -24,7 +24,7 @@ else
 fi
 export LD_LIBRARY_PATH
 
-HD_PWD='D:/workspace/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.runs/impl_1'
+HD_PWD='D:/PROJECT/RTL/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.runs/impl_1'
 cd "$HD_PWD"
 
 HD_LOG=runme.log
