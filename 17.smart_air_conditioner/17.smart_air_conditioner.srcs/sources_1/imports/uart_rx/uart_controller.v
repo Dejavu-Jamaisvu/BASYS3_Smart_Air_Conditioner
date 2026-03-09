@@ -3,33 +3,26 @@
 module uart_controller(
     input clk,
     input reset,
-    input [7:0] send_data,
     input rx,
     output tx,
+
+    input [7:0] rtc_hour,
+    input [7:0] rtc_minute,
+
     output [7:0] rx_data,
     output rx_done
     );
 
+    wire w_tx_busy;
+    wire w_tx_done;
+    wire w_tx_start;
+    wire [7:0] w_tx_data;
 
-    wire w_tick_1Hz;
-    wire w_tx_busy, w_tx_done, w_tx_start;
-    wire [7:0] w_tx_data; 
-
-    tick_generator # (
-        .INPUT_FREQUENCY(100_000_000),   // 100MHz
-        .TICK_Hz(1)   // 1Hz
-    ) u_tick_generator (
+    rtc_time_sender u_rtc_time_sender(
         .clk(clk),
         .reset(reset),
-        .tick(w_tick_1Hz)
-        );
-
-    
-    data_sender u_data_sender(
-        .clk(clk),
-        .reset(reset),
-        .start_trigger(w_tick_1Hz),
-        .send_data(send_data),   // 1 byte
+        .rtc_hour(rtc_hour),
+        .rtc_minute(rtc_minute),
         .tx_busy(w_tx_busy),
         .tx_done(w_tx_done),
         .tx_start(w_tx_start),
@@ -50,7 +43,7 @@ module uart_controller(
 
     uart_rx #(
         .BPS(9600)
-    ) u_uart_rx (
+    ) u_uart_rx(
         .clk(clk),
         .reset(reset),
         .rx(rx),

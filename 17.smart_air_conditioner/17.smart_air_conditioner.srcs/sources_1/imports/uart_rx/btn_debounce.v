@@ -1,3 +1,5 @@
+`timescale 1ns / 1ps
+
 module btn_debouncer(
     input clk,
     input reset,

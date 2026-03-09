@@ -10,6 +10,7 @@ module fnd_controller(
     input circle_mode,     // 애니메이션 모드 활성화
 
     input [13:0] in_data, // 현재 금액 (coin_val)
+    input  [3:0] blank_mask, // active-high digit blank: [3]=d1000 [2]=d100 [1]=d10 [0]=d1
     output [3:0] an,
     output [7:0] seg    
     );
@@ -44,6 +45,7 @@ module fnd_controller(
         .d10(w_d10),
         .d100(w_d100),
         .d1000(w_d1000),
+        .blank_mask(blank_mask),
 
         .an(an_bcd),
         .seg(seg_bcd)
@@ -130,6 +132,7 @@ module fnd_digit_diaply (
     input [3:0] d10,
     input [3:0] d100,
     input [3:0] d1000,
+    input [3:0] blank_mask, // [3]=d1000 [2]=d100 [1]=d10 [0]=d1
     output reg [3:0] an,
     output reg [7:0] seg
 );
@@ -161,20 +164,25 @@ module fnd_digit_diaply (
         endcase 
     end 
 
-    always @(bcd_data) begin
-        case(bcd_data)
-            4'd0: seg = 8'b11000000;   // 0
-            4'd1: seg = 8'b11111001;   // 1
-            4'd2: seg = 8'b10100100;   // 2
-            4'd3: seg = 8'b10110000;   // 3
-            4'd4: seg = 8'b10011001;   // 4
-            4'd5: seg = 8'b10010010;   // 5
-            4'd6: seg = 8'b10000010;   // 6
-            4'd7: seg = 8'b11111000;   // 7
-            4'd8: seg = 8'b10000000;   // 8
-            4'd9: seg = 8'b10010000;   // 9
-            default: seg = 8'b11111111;  // all off  
-        endcase 
+    always @(bcd_data, blank_mask, digit_sel) begin
+        // If this digit position is masked, blank it regardless of value.
+        if (blank_mask[digit_sel]) begin
+            seg = 8'b11111111;  // all segments off (blank)
+        end else begin
+            case(bcd_data)
+                4'd0: seg = 8'b11000000;   // 0
+                4'd1: seg = 8'b11111001;   // 1
+                4'd2: seg = 8'b10100100;   // 2
+                4'd3: seg = 8'b10110000;   // 3
+                4'd4: seg = 8'b10011001;   // 4
+                4'd5: seg = 8'b10010010;   // 5
+                4'd6: seg = 8'b10000010;   // 6
+                4'd7: seg = 8'b11111000;   // 7
+                4'd8: seg = 8'b10000000;   // 8
+                4'd9: seg = 8'b10010000;   // 9
+                default: seg = 8'b11111111;  // all off
+            endcase
+        end
     end 
 endmodule
 

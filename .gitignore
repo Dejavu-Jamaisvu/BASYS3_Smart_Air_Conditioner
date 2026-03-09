@@ -13,6 +13,8 @@
 *.wdf
 *.xml
 *.wpc
+*.sdb
+*.rst
 
 # Temporary files
 .Xil/

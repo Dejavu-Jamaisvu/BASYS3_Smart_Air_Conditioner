@@ -4,7 +4,7 @@
 
 set TIME_start [clock seconds] 
 namespace eval ::optrace {
-  variable script "D:/PROJECT/RTL/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.runs/synth_1/top.tcl"
+  variable script "D:/workspace/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.runs/synth_1/top.tcl"
   variable category "vivado_synth"
 }
 
@@ -70,34 +70,46 @@ proc create_report { reportName command } {
   }
 }
 OPTRACE "synth_1" START { ROLLUP_AUTO }
+set_param checkpoint.writeSynthRtdsInDcp 1
 set_param chipscope.maxJobs 2
+set_param synth.incrementalSynthesisCache C:/Users/user/AppData/Roaming/Xilinx/Vivado/.Xil/Vivado-4296-kccistc/incrSyn
 set_param xicom.use_bs_reader 1
+set_msg_config -id {Common 17-41} -limit 10000000
+set_msg_config -id {Synth 8-256} -limit 10000
+set_msg_config -id {Synth 8-638} -limit 10000
 OPTRACE "Creating in-memory project" START { }
 create_project -in_memory -part xc7a35tcpg236-1
 
 set_param project.singleFileAddWarning.threshold 0
 set_param project.compositeFile.enableAutoGeneration 0
 set_param synth.vivado.isSynthRun true
-set_property webtalk.parent_dir D:/PROJECT/RTL/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.cache/wt [current_project]
-set_property parent.project_path D:/PROJECT/RTL/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.xpr [current_project]
+set_property webtalk.parent_dir D:/workspace/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.cache/wt [current_project]
+set_property parent.project_path D:/workspace/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.xpr [current_project]
 set_property default_lib xil_defaultlib [current_project]
 set_property target_language Verilog [current_project]
 set_property board_part digilentinc.com:basys3:part0:1.2 [current_project]
-set_property ip_output_repo d:/PROJECT/RTL/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.cache/ip [current_project]
+set_property ip_output_repo d:/workspace/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.cache/ip [current_project]
 set_property ip_cache_permissions {read write} [current_project]
 OPTRACE "Creating in-memory project" END { }
 OPTRACE "Adding files" START { }
 read_verilog -library xil_defaultlib {
-  D:/PROJECT/RTL/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.srcs/sources_1/imports/uart_rx/btn_debounce.v
-  D:/PROJECT/RTL/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.srcs/sources_1/imports/uart_rx/control_tower.v
-  D:/PROJECT/RTL/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.srcs/sources_1/imports/uart_rx/data_sender.v
-  D:/PROJECT/RTL/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.srcs/sources_1/new/dht11_controller.v
-  D:/PROJECT/RTL/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.srcs/sources_1/new/fnd_controller.v
-  D:/PROJECT/RTL/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.srcs/sources_1/imports/uart_rx/tick_generator.v
-  D:/PROJECT/RTL/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.srcs/sources_1/imports/uart_rx/uart_controller.v
-  D:/PROJECT/RTL/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.srcs/sources_1/imports/uart_rx/uart_rx.v
-  D:/PROJECT/RTL/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.srcs/sources_1/imports/uart_rx/uart_tx.v
-  D:/PROJECT/RTL/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.srcs/sources_1/imports/uart_rx/top.v
+  D:/workspace/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.srcs/sources_1/imports/uart_rx/alarm_controller.v
+  D:/workspace/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.srcs/sources_1/imports/uart_rx/btn_debounce.v
+  D:/workspace/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.srcs/sources_1/imports/uart_rx/buzzer_driver.v
+  D:/workspace/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.srcs/sources_1/imports/uart_rx/control_tower.v
+  D:/workspace/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.srcs/sources_1/new/dht11_controller.v
+  D:/workspace/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.srcs/sources_1/imports/uart_rx/ds1302_rtc.v
+  D:/workspace/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.srcs/sources_1/new/fnd_controller.v
+  D:/workspace/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.srcs/sources_1/imports/uart_rx/rotary_time_setter.v
+  D:/workspace/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.srcs/sources_1/imports/uart_rx/rtc_command_parser.v
+  D:/workspace/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.srcs/sources_1/imports/uart_rx/rtc_display.v
+  D:/workspace/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.srcs/sources_1/imports/uart_rx/rtc_time_sender.v
+  D:/workspace/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.srcs/sources_1/imports/uart_rx/tick_generator.v
+  D:/workspace/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.srcs/sources_1/imports/uart_rx/uart_controller.v
+  D:/workspace/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.srcs/sources_1/imports/uart_rx/uart_rx.v
+  D:/workspace/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.srcs/sources_1/imports/uart_rx/uart_tx.v
+  D:/workspace/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.srcs/sources_1/imports/uart_rx/warning_controller.v
+  D:/workspace/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.srcs/sources_1/imports/uart_rx/top.v
 }
 OPTRACE "Adding files" END { }
 # Mark all dcp files as not used in implementation to prevent them from being
@@ -108,8 +120,8 @@ OPTRACE "Adding files" END { }
 foreach dcp [get_files -quiet -all -filter file_type=="Design\ Checkpoint"] {
   set_property used_in_implementation false $dcp
 }
-read_xdc D:/PROJECT/RTL/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.srcs/constrs_1/imports/uart_rx/basys3.xdc
-set_property used_in_implementation false [get_files D:/PROJECT/RTL/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.srcs/constrs_1/imports/uart_rx/basys3.xdc]
+read_xdc D:/workspace/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.srcs/constrs_1/imports/uart_rx/basys3.xdc
+set_property used_in_implementation false [get_files D:/workspace/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.srcs/constrs_1/imports/uart_rx/basys3.xdc]
 
 set_param ips.enableIPCacheLiteLoad 1
 close [open __synthesis_is_running__ w]
