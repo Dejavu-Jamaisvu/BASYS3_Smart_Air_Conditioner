@@ -53,7 +53,6 @@ module rotary_time_setter(
     reg r_prev_sw;
     reg r_prev_alarm_btn;
     reg r_prev_dismiss;
-    reg r_alarm_configured;
 
     reg r_step_cw;
     reg r_step_ccw;
@@ -110,7 +109,6 @@ module rotary_time_setter(
             r_prev_sw <= 1'b0;
             r_prev_alarm_btn <= 1'b0;
             r_prev_dismiss <= 1'b0;
-            r_alarm_configured <= 1'b0;
             r_step_cw <= 1'b0;
             r_step_ccw <= 1'b0;
             r_sw_click <= 1'b0;
@@ -180,15 +178,9 @@ module rotary_time_setter(
                             edit_mode       <= 1'b1;
                             edit_alarm_mode <= 1'b1;
                             edit_field      <= 1'b0;   // HH blinks first
-                            // First entry after reset starts from current RTC time.
-                            // After at least one save, re-entry starts from saved alarm time.
-                            if (r_alarm_configured) begin
-                                edit_hour   <= alarm_hour_cfg;
-                                edit_minute <= alarm_minute_cfg;
-                            end else begin
-                                edit_hour   <= rtc_hour;
-                                edit_minute <= rtc_minute;
-                            end
+                            // Pre-load previously saved alarm time
+                            edit_hour   <= alarm_hour_cfg;
+                            edit_minute <= alarm_minute_cfg;
                         end
                     end
 
@@ -231,7 +223,6 @@ module rotary_time_setter(
                             alarm_minute_cfg <= edit_minute;
                             alarm_enable_cfg <= 1'b1;
                             alarm_update_pulse <= 1'b1;   // one-cycle pulse to alarm_controller
-                            r_alarm_configured <= 1'b1;
                         end
                     end
 
