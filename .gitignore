@@ -15,13 +15,13 @@
 .Xil/
 
 # Synthesis and implementation runs
-.runs/
+*.runs/
 
 # Hardware handoff
 .hw/
 
 # Simulation files
-.sim/
+*.sim/
 
 # IP cores
 .ip_user_files/
@@ -30,13 +30,14 @@
 #*.xpr
 
 # Cache files
-.cache/
+*.cache/
 
 # Other temporary files
 *.backup.*
 *.tmp
 *.swp
 *.swo
+*.xsim.dir/
 
 # OS generated files
 .DS_Store
