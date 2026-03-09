@@ -17,8 +17,9 @@ parameter START_LOW       = 3'd1;
 parameter START_RELEASE   = 3'd2;
 parameter WAIT_RESP_LOW   = 3'd3;
 parameter WAIT_RESP_HIGH  = 3'd4;
-parameter READ_DATA       = 3'd5;
-parameter DONE            = 3'd6;
+parameter WAIT_FIRST_LOW  = 3'd5; //추가
+parameter READ_DATA       = 3'd6;
+parameter DONE            = 3'd7;
 
 reg [2:0] state;
 
@@ -75,8 +76,9 @@ always @(posedge clk or posedge reset) begin
 
         IDLE:
         begin
-            data_valid <= 0;
+            // data_valid <= 0; // 이 줄을 주석 처리하면 다음 측정 전까지 LED가 유지됩니다.
             if(start) begin
+                data_valid <= 0; // 새로운 측정이 시작될 때만 valid를 끕니다.
                 state <= START_LOW;
                 timer <= 0;
                 data_dir <= 1;
@@ -84,7 +86,7 @@ always @(posedge clk or posedge reset) begin
             end
         end
 
-
+        
         START_LOW:
         begin
             if(tick_1us)
@@ -111,44 +113,85 @@ always @(posedge clk or posedge reset) begin
         end
 
 
+
         WAIT_RESP_LOW:
         begin
             if(data_in == 0)
                 state <= WAIT_RESP_HIGH;
         end
 
+
+        // WAIT_RESP_HIGH:
+        // begin
+        //     if(data_in == 1) begin
+        //         bit_cnt <= 0;
+        //         state <= READ_DATA;
+        //     end
+        // end
+
+
         WAIT_RESP_HIGH:
         begin
-            if(data_in == 1) begin
+            if(data_in == 1)
+                state <= WAIT_FIRST_LOW;
+        end
+
+        WAIT_FIRST_LOW:
+        begin
+            if(data_in == 0) begin
                 bit_cnt <= 0;
                 state <= READ_DATA;
             end
         end
 
 
+
+        // READ_DATA:
+        // begin
+        //     if(data_in == 1) begin
+
+        //         if(tick_1us)
+        //             timer <= timer + 1;
+
+        //     end
+        //     else begin
+
+        //         if(timer > 50)
+        //             data_shift <= {data_shift[38:0],1'b1};
+        //         else
+        //             data_shift <= {data_shift[38:0],1'b0};
+
+        //         timer <= 0;
+        //         bit_cnt <= bit_cnt + 1;
+
+        //         if(bit_cnt == 39)
+        //             state <= DONE;
+        //     end
+        // end
+
+
+
+        // 상태 머신 내부 READ_DATA 부분 수정 제
         READ_DATA:
         begin
-            if(data_in == 1) begin
-
-                if(tick_1us)
-                    timer <= timer + 1;
-
-            end
-            else begin
-
-                if(timer > 40)
-                    data_shift <= {data_shift[38:0],1'b1};
-                else
-                    data_shift <= {data_shift[38:0],1'b0};
+            if (data_in == 1) begin
+                if (tick_1us) timer <= timer + 1;
+            end 
+            else if (data_in == 0 && timer > 0) begin // Falling Edge 시점
+                // 비트 판별 (40us 기준)
+                if (timer > 40) 
+                    data_shift <= {data_shift[38:0], 1'b1};
+                else 
+                    data_shift <= {data_shift[38:0], 1'b0};
 
                 timer <= 0;
                 bit_cnt <= bit_cnt + 1;
 
-                if(bit_cnt == 39)
+                if (bit_cnt >= 39) begin
                     state <= DONE;
+                end
             end
         end
-
 
         DONE:
         begin

@@ -62,11 +62,11 @@ module control_tower(
         if (r_mode == MODE_CLOCK) begin
             // 시계 모드: 분(2자리) + 초(2자리) -> MMSS
             seg_data = (r_min * 100) + r_sec;
-            led = 16'b0000_0000_0000_0001; // 시계 모드 표시
+            //led = 16'b0000_0000_0000_0001; // 시계 모드 표시
         end else begin
             // 온습도 모드: 습도(2자리) + 온도(2자리) -> HHTT
             seg_data = (humidity * 100) + temperature;
-            led = 16'b0000_0000_0000_0010; // 온습도 모드 표시
+            //led = 16'b0000_0000_0000_0010; // 온습도 모드 표시
         end
     end
 
