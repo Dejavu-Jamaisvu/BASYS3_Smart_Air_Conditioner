@@ -97,13 +97,13 @@ read_verilog -library xil_defaultlib {
   D:/workspace/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.srcs/sources_1/imports/uart_rx/btn_debounce.v
   D:/workspace/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.srcs/sources_1/imports/uart_rx/buzzer_driver.v
   D:/workspace/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.srcs/sources_1/imports/uart_rx/control_tower.v
+  D:/workspace/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.srcs/sources_1/imports/uart_rx/data_sender.v
   D:/workspace/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.srcs/sources_1/new/dht11_controller.v
   D:/workspace/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.srcs/sources_1/imports/uart_rx/ds1302_rtc.v
   D:/workspace/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.srcs/sources_1/new/fnd_controller.v
   D:/workspace/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.srcs/sources_1/imports/uart_rx/rotary_time_setter.v
   D:/workspace/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.srcs/sources_1/imports/uart_rx/rtc_command_parser.v
   D:/workspace/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.srcs/sources_1/imports/uart_rx/rtc_display.v
-  D:/workspace/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.srcs/sources_1/imports/uart_rx/rtc_time_sender.v
   D:/workspace/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.srcs/sources_1/imports/uart_rx/tick_generator.v
   D:/workspace/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.srcs/sources_1/imports/uart_rx/uart_controller.v
   D:/workspace/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.srcs/sources_1/imports/uart_rx/uart_rx.v
