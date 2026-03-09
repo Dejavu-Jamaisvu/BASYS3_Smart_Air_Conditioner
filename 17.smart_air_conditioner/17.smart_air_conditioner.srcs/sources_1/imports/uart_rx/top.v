@@ -3,329 +3,172 @@
 module top(
     input clk,
     input reset,
-
-    input [2:0] btn,
+    
+    input [2:0]  btn,
     input [7:0] sw,
-    input [7:0] fault_flags,
-
-    input RsRx,
-    output RsTx,
-
-    input s1,
-    input s2,
-    input key,
+    input RsRx,    // UART rx
+    output RsTx,   // UART tx
 
     inout dht_data,
 
     output [7:0] seg,
     output [3:0] an,
-    output [15:0] led,
-
-    output uartTx,
-    output uartRx,
-
-    output rtc_ce,
-    output rtc_sclk,
-    inout rtc_io,
-
-    output buzzer_out
+    output [15:0]  led,
+    output uartTx,   // JB1   for 오실로스코프
+    output uartRx
     );
 
-    wire [2:0] w_clean_btn;
-    wire w_clean_s1;
-    wire w_clean_s2;
-    wire w_clean_key;
-
-    wire w_dht_mode;
 
     wire [7:0] w_rx_data;
     wire w_rx_done;
-
-    wire w_uart_set_valid;
-    wire [7:0] w_uart_year;
-    wire [7:0] w_uart_month;
-    wire [7:0] w_uart_date;
-    wire [7:0] w_uart_hour;
-    wire [7:0] w_uart_minute;
-    wire [7:0] w_uart_second;
-
-    wire w_rot_set_valid;
-    wire [7:0] w_rot_set_year;
-    wire [7:0] w_rot_set_month;
-    wire [7:0] w_rot_set_date;
-    wire [7:0] w_rot_set_hour;
-    wire [7:0] w_rot_set_minute;
-    wire [7:0] w_rot_set_second;
-
-    wire w_edit_mode;
-    wire w_edit_field;
-    wire w_edit_alarm_mode;
-    wire [7:0] w_edit_hour;
-    wire [7:0] w_edit_minute;
-
-    wire w_alarm_enable_cfg;
-    wire [7:0] w_alarm_hour_cfg;
-    wire [7:0] w_alarm_minute_cfg;
-    wire w_alarm_update_pulse;
-
-    wire [7:0] w_rtc_year;
-    wire [7:0] w_rtc_month;
-    wire [7:0] w_rtc_date;
-    wire [7:0] w_rtc_hour;
-    wire [7:0] w_rtc_minute;
-    wire [7:0] w_rtc_second;
-
-    wire w_alarm_active;
-    wire w_alarm_buzzer_on;
-    wire w_alarm_triggered;
-
-    wire w_warning_active;
-    wire w_warning_buzzer_on;
-
-    wire [7:0] w_humidity_raw;
-    wire [7:0] w_temperature_raw;
-    wire w_dht_valid;
-    reg [7:0] r_humidity;
-    reg [7:0] r_temperature;
-
     wire [13:0] w_seg_data;
-    wire [3:0]  w_seg_blank;
+    wire [2:0] w_clean_btn;
 
-    wire w_tick_1ms;
-    wire w_tick_50ms;
 
-    wire w_set_valid;
-    wire [7:0] w_set_year;
-    wire [7:0] w_set_month;
-    wire [7:0] w_set_date;
-    wire [7:0] w_set_hour;
-    wire [7:0] w_set_minute;
-    wire [7:0] w_set_second;
+    // DHT11 및 FND용 와이어
+    wire [7:0] w_humidity, w_temp;
+    wire w_dht_valid;
+    wire w_tick_1ms; //FND 스캔
+    wire w_tick_50ms; //FND 애니메이션
+    wire w_tick_1s; //DHT11 측정 start
+
+
+
 
     btn_debouncer u_btn_debouncer(
         .clk(clk),
         .reset(reset),
-        .btn(btn),
+        .btn(btn),   // 3개의 버튼 입력: btn[2:0] → 각각 btnL, btnC, btnR
         .debounced_btn(w_clean_btn)
-    );
-
-    // Rotary A/B should be lightly debounced so short transitions are not lost.
-    debouncer #(.DEBOUNCE_LIMIT(20'd99_999)) u_deb_s1 (
-        .clk(clk),
-        .reset(reset),
-        .noisy_btn(s1),
-        .clean_btn(w_clean_s1)
-    );
-
-    debouncer #(.DEBOUNCE_LIMIT(20'd99_999)) u_deb_s2 (
-        .clk(clk),
-        .reset(reset),
-        .noisy_btn(s2),
-        .clean_btn(w_clean_s2)
-    );
-
-    debouncer u_deb_key (
-        .clk(clk),
-        .reset(reset),
-        .noisy_btn(key),
-        .clean_btn(w_clean_key)
     );
 
     control_tower u_control_tower(
         .clk(clk),
-        .reset(reset),
-        .btn_mode(w_clean_btn[0]),
-        .dht_mode(w_dht_mode)
+        .reset(reset),  // sw[15]
+        .btn(w_clean_btn),   // btn[0]: btnL btn[1]: btnC btn[2]: btnR
+        // .sw(sw),
+        // .rx_data(w_rx_data),   // UART 8 bits
+        // .rx_done(w_rx_done),    // 8bit data reached : 1
+        .humidity(w_humidity),    // dht11_controller에서 나온 와이어
+        .temperature(w_temp),     // dht11_controller에서 나온 와이어
+        .seg_data(w_seg_data),
+        .led(led)
     );
 
-    uart_controller u_uart_controller(
-        .clk(clk),
-        .reset(reset),
-        .rx(RsRx),
-        .tx(RsTx),
-        .rtc_hour(w_rtc_hour),
-        .rtc_minute(w_rtc_minute),
-        .rx_data(w_rx_data),
-        .rx_done(w_rx_done)
-    );
+    // 온습도 10초 카운터 수정 (첫 즉시 실행 버전)
+    reg [4:0] count_20s; 
+    reg tick_20s_reg;
 
-    rtc_command_parser u_rtc_cmd_parser(
-        .clk(clk),
-        .reset(reset),
-        .rx_data(w_rx_data),
-        .rx_done(w_rx_done),
-        .set_time_valid(w_uart_set_valid),
-        .out_year(w_uart_year),
-        .out_month(w_uart_month),
-        .out_date(w_uart_date),
-        .out_hour(w_uart_hour),
-        .out_minute(w_uart_minute),
-        .out_second(w_uart_second)
-    );
+    always @(posedge clk or posedge reset) begin
+        if(reset) begin
+            // 핵심: 초기값을 9로 설정하면 1초 틱이 오자마자 첫 측정이 시작됩니다!
+            count_20s <= 19; 
+            tick_20s_reg <= 0;
+        end else if(w_tick_1s) begin
+            if(count_20s == 19) begin
+                count_20s <= 0;
+                tick_20s_reg <= 1;  // 즉시 실행 신호 발사!
+            end else begin
+                count_20s <= count_20s + 1;
+                tick_20s_reg <= 0;
+            end
+        end else begin
+            tick_20s_reg <= 0;
+        end
+    end
 
-    rotary_time_setter u_rotary_setter(
-        .clk(clk),
-        .reset(reset),
-        .dht_mode(w_dht_mode),
-        .rot_a(w_clean_s1),
-        .rot_b(w_clean_s2),
-        .rot_sw(w_clean_key),
-        .alarm_mode_btn(w_clean_btn[1]),
-        .dismiss_btn(w_clean_btn[2]),
-        .rtc_year(w_rtc_year),
-        .rtc_month(w_rtc_month),
-        .rtc_date(w_rtc_date),
-        .rtc_hour(w_rtc_hour),
-        .rtc_minute(w_rtc_minute),
-        .edit_mode(w_edit_mode),
-        .edit_field(w_edit_field),
-        .edit_alarm_mode(w_edit_alarm_mode),
-        .edit_hour(w_edit_hour),
-        .edit_minute(w_edit_minute),
-        .set_time_valid(w_rot_set_valid),
-        .set_year(w_rot_set_year),
-        .set_month(w_rot_set_month),
-        .set_date(w_rot_set_date),
-        .set_hour(w_rot_set_hour),
-        .set_minute(w_rot_set_minute),
-        .set_second(w_rot_set_second),
-        .alarm_enable_cfg(w_alarm_enable_cfg),
-        .alarm_hour_cfg(w_alarm_hour_cfg),
-        .alarm_minute_cfg(w_alarm_minute_cfg),
-        .alarm_update_pulse(w_alarm_update_pulse)
-    );
 
-    assign w_set_valid  = w_rot_set_valid | w_uart_set_valid;
-    assign w_set_year   = w_rot_set_valid ? w_rot_set_year   : w_uart_year;
-    assign w_set_month  = w_rot_set_valid ? w_rot_set_month  : w_uart_month;
-    assign w_set_date   = w_rot_set_valid ? w_rot_set_date   : w_uart_date;
-    assign w_set_hour   = w_rot_set_valid ? w_rot_set_hour   : w_uart_hour;
-    assign w_set_minute = w_rot_set_valid ? w_rot_set_minute : w_uart_minute;
-    assign w_set_second = w_rot_set_valid ? w_rot_set_second : w_uart_second;
-
-    ds1302_rtc u_ds1302_rtc(
-        .clk(clk),
-        .reset(reset),
-        .set_time_valid(w_set_valid),
-        .set_year(w_set_year),
-        .set_month(w_set_month),
-        .set_date(w_set_date),
-        .set_hour(w_set_hour),
-        .set_minute(w_set_minute),
-        .set_second(w_set_second),
-        .r_year(w_rtc_year),
-        .r_month(w_rtc_month),
-        .r_date(w_rtc_date),
-        .r_hour(w_rtc_hour),
-        .r_minute(w_rtc_minute),
-        .r_second(w_rtc_second),
-        .rtc_ce(rtc_ce),
-        .rtc_sclk(rtc_sclk),
-        .rtc_io(rtc_io)
-    );
-
-    alarm_controller u_alarm_controller(
-        .clk(clk),
-        .reset(reset),
-        .rtc_hour(w_rtc_hour),
-        .rtc_minute(w_rtc_minute),
-        .rtc_second(w_rtc_second),
-        .alarm_enable_cfg(w_alarm_enable_cfg),
-        .alarm_hour_cfg(w_alarm_hour_cfg),
-        .alarm_minute_cfg(w_alarm_minute_cfg),
-        .alarm_update_pulse(w_alarm_update_pulse),
-        .dismiss_btn(w_clean_btn[2]),
-        .alarm_active(w_alarm_active),
-        .buzzer_on(w_alarm_buzzer_on),
-        .alarm_triggered(w_alarm_triggered)
-    );
-
-    warning_controller u_warning_controller(
-        .clk(clk),
-        .reset(reset),
-        .fault_flags(fault_flags),
-        .cancel_btn(w_clean_btn[1]),
-        .warning_active(w_warning_active),
-        .warning_buzzer_on(w_warning_buzzer_on)
-    );
-
-    buzzer_driver u_buzzer_driver(
-        .clk(clk),
-        .reset(reset),
-        .alarm_buzzer_on(w_alarm_buzzer_on),
-        .warning_buzzer_on(w_warning_buzzer_on),
-        .buzzer_out(buzzer_out)
-    );
 
     dht11_controller u_dht11_controller(
         .clk(clk),
         .reset(reset),
-        .start(w_tick_50ms),
+        // .start(w_clean_btn[0]),
+        .start(tick_20s_reg), // 20초마다
         .dht_data(dht_data),
-        .humidity(w_humidity_raw),
-        .temperature(w_temperature_raw),
+        .humidity(w_humidity),
+        .temperature(w_temp),
         .data_valid(w_dht_valid)
     );
 
+    reg dht_valid_prev;
+    wire w_uart_trigger;
+
     always @(posedge clk or posedge reset) begin
-        if (reset) begin
-            r_humidity <= 8'd0;
-            r_temperature <= 8'd0;
-        end else if (w_dht_valid) begin
-            r_humidity <= w_humidity_raw;
-            r_temperature <= w_temperature_raw;
-        end
+        if(reset) dht_valid_prev <= 0;
+        else dht_valid_prev <= w_dht_valid;
     end
 
-    rtc_display u_rtc_display(
+    assign w_uart_trigger = (w_dht_valid && !dht_valid_prev);    
+
+    uart_controller u_uart_controller(
         .clk(clk),
         .reset(reset),
-        .dht_mode(w_dht_mode),
-        .edit_mode(w_edit_mode),
-        .edit_alarm_mode(w_edit_alarm_mode),
-        .edit_field(w_edit_field),
-        .rtc_hour(w_rtc_hour),
-        .rtc_minute(w_rtc_minute),
-        .edit_hour(w_edit_hour),
-        .edit_minute(w_edit_minute),
-        .alarm_hour(w_alarm_hour_cfg),
-        .alarm_minute(w_alarm_minute_cfg),
-        .humidity(r_humidity),
-        .temperature(r_temperature),
-        .seg_data(w_seg_data),
-        .seg_blank(w_seg_blank)
+        .send_data({w_temp, w_humidity}),
+        .start_trigger(w_uart_trigger), // tick_20s_reg , w_dht_valid 지금현재값 한번만 출력
+        .rx(RsRx),
+        .tx(RsTx),
+        .rx_data(w_rx_data),
+        .rx_done(w_rx_done)
     );
-
     fnd_controller u_fnd_controller(
         .clk(clk),
         .reset(reset),
         .tick_1ms(w_tick_1ms),
         .tick_50ms(w_tick_50ms),
-        .circle_mode(1'b0),
-        .in_data(w_seg_data),
-        .blank_mask(w_seg_blank),
+        .circle_mode(sw[7]), // 예시: sw[7]이 켜지면 애니메이션 모드 
+        .in_data(w_seg_data), 
         .an(an),
         .seg(seg)
     );
 
+
+
     tick_generator #(.TICK_Hz(1000)) u_tick_1ms (
-        .clk(clk),
-        .reset(reset),
-        .tick(w_tick_1ms)
+        .clk(clk), .reset(reset), .tick(w_tick_1ms)
     );
-
     tick_generator #(.TICK_Hz(20)) u_tick_50ms (
-        .clk(clk),
-        .reset(reset),
-        .tick(w_tick_50ms)
+        .clk(clk), .reset(reset), .tick(w_tick_50ms)
     );
 
-    assign led = 16'h0000;
-
-    assign uartTx = RsTx;
+    tick_generator #(.TICK_Hz(1)) u_tick_1s (
+        .clk(clk),
+        .reset(reset),
+        .tick(w_tick_1s)
+    );
+    
+    assign uartTx = RsTx; // 오실로스크프  측정 단자  
     assign uartRx = RsRx;
 
-    // Keep currently unused inputs referenced to avoid optimization warnings.
-    wire [7:0] _unused_sw = sw;
+
+
+
+
+
+    //---아래 디버깅용---
+    reg led_toggle;
+
+    always @(posedge clk or posedge reset) begin
+        if(reset)
+            led_toggle <= 0;
+        else if(w_tick_1s)
+            led_toggle <= ~led_toggle;
+    end
+
+
+    reg led_valid_toggle;
+
+    always @(posedge clk or posedge reset) begin
+        if(reset) led_valid_toggle <= 0;
+        else if(w_dht_valid) // 측정이 성공할 때마다
+            led_valid_toggle <= ~led_valid_toggle; // 상태를 반전시킴
+    end
+
+    assign led[15] = led_valid_toggle; // 성공할 때마다 LED가 켜졌다~ 꺼졌다~ 함
+    //assign led[15] = w_dht_valid; //DHT11 읽기 성공 1초마다 깜빡임
+
+    // assign led[14] = w_tick_1s;
+    assign led[14] = led_toggle;
+
+    assign led[13] = dht_data;
 
 endmodule
