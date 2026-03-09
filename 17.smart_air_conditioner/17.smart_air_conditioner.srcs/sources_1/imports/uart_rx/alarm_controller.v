@@ -50,8 +50,10 @@ module alarm_controller(
             if (alarm_update_pulse) begin
                 r_alarm_hour <= alarm_hour_cfg;
                 r_alarm_minute <= alarm_minute_cfg;
+                r_alarm_enable <= alarm_enable_cfg;
+                alarm_active <= 1'b0;
+                alarm_triggered <= 1'b0;
             end
-            r_alarm_enable <= alarm_enable_cfg;
 
             if (w_dismiss_rise)
                 alarm_active <= 1'b0;
@@ -59,14 +61,15 @@ module alarm_controller(
             if (!r_alarm_enable) begin
                 alarm_active <= 1'b0;
                 alarm_triggered <= 1'b0;
-            end else if (w_second_tick) begin
-                if (w_time_slot_match) begin
+            end else begin
+                if (!w_time_slot_match)
+                    alarm_triggered <= 1'b0;
+
+                if (w_second_tick && w_time_slot_match) begin
                     if ((rtc_second[6:0] == 7'd0) && !alarm_triggered) begin
                         alarm_active <= 1'b1;
                         alarm_triggered <= 1'b1;
                     end
-                end else begin
-                    alarm_triggered <= 1'b0;
                 end
             end
 
