@@ -387,7 +387,7 @@ module top(
 
 
     // [신규] 에어컨 제어 모듈
-    aircon_control u_aircon_logic (
+    aircon_control u_aircon_control (
         .clk(clk),
         .reset(reset),
         .btn_up(w_clean_btn[3]),   // Up 버튼

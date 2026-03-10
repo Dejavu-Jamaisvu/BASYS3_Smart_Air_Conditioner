@@ -24,6 +24,9 @@ module data_sender(
     always @(posedge clk or posedge reset) begin
         if (reset) begin
             tx_start <= 0; tx_data <= 0; state <= 0;
+        // end else if (error_in && state < 100) begin // 데이터 전송 중 에러 터지면
+        //     state <= 0;                             // 상태 0으로 강제 복귀
+        //     tx_start <= 0;
         end else begin
             case (state)
                 0: begin 
