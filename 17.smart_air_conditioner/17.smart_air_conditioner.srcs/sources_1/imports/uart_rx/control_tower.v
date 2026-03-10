@@ -3,7 +3,7 @@
 module control_tower(
     input clk,
     input reset,
-    input [2:0] btn,         // btn[0] toggles mode
+    input [4:0] btn,         // btn[0] toggles mode
     input [7:0] humidity,    // DHT11 humidity
     input [7:0] temperature, // DHT11 temperature
     output reg [13:0] seg_data,

@@ -3,8 +3,8 @@
 module btn_debouncer(
     input clk,
     input reset,
-    input [2:0] btn,   // 3개의 버튼 입력: btn[2:0] → 각각 btnL, btnC, btnR
-    output [2:0] debounced_btn
+    input [4:0] btn,   // 3개의 버튼 입력: btn[2:0] → 각각 btnL, btnC, btnR
+    output [4:0] debounced_btn
 );
     debouncer U_debouncer_btnL (
         .clk(clk),
@@ -25,6 +25,23 @@ module btn_debouncer(
         .reset(reset),
         .noisy_btn(btn[2]),
         .clean_btn(debounced_btn[2])
+    );
+
+    
+    debouncer U_debouncer_btnU (
+        .clk(clk),
+        .reset(reset),
+        .noisy_btn(btn[3]),
+        .clean_btn(debounced_btn[3])
+    );
+
+
+    
+    debouncer U_debouncer_btnD (
+        .clk(clk),
+        .reset(reset),
+        .noisy_btn(btn[4]),
+        .clean_btn(debounced_btn[4])
     );
 
  //   assign led = debounced_btn;   // button을 누를때 마다 led가 동작 되도록 한다.

@@ -25,7 +25,7 @@ set_property -dict { PACKAGE_PIN R3    IOSTANDARD LVCMOS33 } [get_ports {fault_f
 set_property -dict { PACKAGE_PIN W2    IOSTANDARD LVCMOS33 } [get_ports {fault_flags[4]}]
 set_property -dict { PACKAGE_PIN U1    IOSTANDARD LVCMOS33 } [get_ports {fault_flags[5]}]
 set_property -dict { PACKAGE_PIN T1    IOSTANDARD LVCMOS33 } [get_ports {fault_flags[6]}]
-set_property -dict { PACKAGE_PIN U17   IOSTANDARD LVCMOS33 } [get_ports {fault_flags[7]}]
+# set_property -dict { PACKAGE_PIN U17   IOSTANDARD LVCMOS33 } [get_ports {fault_flags[7]}]
 set_property -dict { PACKAGE_PIN R2    IOSTANDARD LVCMOS33 } [get_ports { reset }]
 
 
@@ -69,8 +69,8 @@ set_property -dict { PACKAGE_PIN W4   IOSTANDARD LVCMOS33 } [get_ports {an[3]}]
 set_property -dict { PACKAGE_PIN W19   IOSTANDARD LVCMOS33 } [get_ports btn[0]]  
 set_property -dict { PACKAGE_PIN U18   IOSTANDARD LVCMOS33 } [get_ports btn[1]]
 set_property -dict { PACKAGE_PIN T17   IOSTANDARD LVCMOS33 } [get_ports btn[2]]
-# set_property -dict { PACKAGE_PIN T18   IOSTANDARD LVCMOS33 } [get_ports increase_duty_btn]
-# set_property -dict { PACKAGE_PIN U17   IOSTANDARD LVCMOS33 } [get_ports decrease_duty_btn]
+set_property -dict { PACKAGE_PIN T18   IOSTANDARD LVCMOS33 } [get_ports btn[3]]
+set_property -dict { PACKAGE_PIN U17   IOSTANDARD LVCMOS33 } [get_ports btn[4]]
 #--- org 
 # set_property -dict { PACKAGE_PIN U18   IOSTANDARD LVCMOS33 } [get_ports btnC]
 # set_property -dict { PACKAGE_PIN T18   IOSTANDARD LVCMOS33 } [get_ports btnU]

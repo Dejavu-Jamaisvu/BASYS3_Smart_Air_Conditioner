@@ -4,9 +4,9 @@ module top(
     input clk,
     input reset,
 
-    input [2:0] btn,
+    input [4:0] btn,
     input [7:0] sw,
-    input [7:0] fault_flags,
+    // input [7:0] fault_flags,
 
     input RsRx,   // UART RX
     output RsTx,  // UART TX
@@ -38,7 +38,7 @@ module top(
 
     wire [13:0] w_seg_data;
     wire [3:0] w_seg_blank;
-    wire [2:0] w_clean_btn;
+    wire [4:0] w_clean_btn;
 
     // DHT11 path
     wire [7:0] w_humidity;
@@ -49,6 +49,10 @@ module top(
     wire w_tick_1ms;
     wire w_tick_50ms;
     wire w_tick_1s;
+
+    
+    wire [7:0] w_set_temp;
+    wire [3:0] w_motor_speed;
 
     // Mode from control_tower
     wire [13:0] w_control_seg_data;
@@ -129,7 +133,7 @@ module top(
     );
 
     // 온습도 측정 주기를 정의
-    parameter UPDATE_PERIOD = 4'd10; 
+    parameter UPDATE_PERIOD = 4'd03; 
 
     reg [3:0] interval_cnt;   // 주기를 카운트하는 변수
     reg trigger_update;       // 센서 및 전송 로직을 깨우는 신호
@@ -283,14 +287,14 @@ module top(
         .alarm_triggered(w_alarm_triggered)
     );
 
-    warning_controller u_warning_controller(
-        .clk(clk),
-        .reset(reset),
-        .fault_flags(fault_flags),
-        .cancel_btn(w_clean_btn[1]),
-        .warning_active(w_warning_active),
-        .warning_buzzer_on(w_warning_buzzer_on)
-    );
+    // warning_controller u_warning_controller(
+    //     .clk(clk),
+    //     .reset(reset),
+    //     .fault_flags(fault_flags),
+    //     .cancel_btn(w_clean_btn[1]),
+    //     .warning_active(w_warning_active),
+    //     .warning_buzzer_on(w_warning_buzzer_on)
+    // );
 
     buzzer_driver u_buzzer_driver(
         .clk(clk),
@@ -315,7 +319,8 @@ module top(
         .alarm_hour(w_alarm_hour_cfg),
         .alarm_minute(w_alarm_minute_cfg),
         .humidity(w_humidity),
-        .temperature(w_temp),
+        // .temperature(w_temp),
+        .temperature(sw[0] ? w_set_temp : w_temp),
         .seg_data(w_seg_data),
         .seg_blank(w_seg_blank)
     );
@@ -359,28 +364,47 @@ module top(
 
 
     // top.v 내부 logic
-    wire [3:0] w_motor_speed;
+    // wire [3:0] w_motor_speed;
 
-    // 요청하신 조건: 10도(70%), 20도(80%), 30도(90%)
-    assign w_motor_speed = (w_temp >= 30) ? 4'd9 : 
-                        (w_temp >= 20) ? 4'd8 : 
-                        (w_temp >= 10) ? 4'd7 : 
-                                            4'd0;
+    // // 요청하신 조건: 10도(70%), 20도(80%), 30도(90%)
+    // assign w_motor_speed = (w_temp >= 30) ? 4'd9 : 
+    //                     (w_temp >= 20) ? 4'd8 : 
+    //                     (w_temp >= 10) ? 4'd7 : 
+    //                                         4'd0;
 
-    // 모터 컨트롤러 인스턴스
+    // // 모터 컨트롤러 인스턴스
+    // pwm_duty_control u_pwm_ctrl (
+    //     .clk(clk),
+    //     .reset(reset),
+    //     .auto_duty_in(w_motor_speed),
+    //     // .DUTY_CYCLE(),
+    //     .PWM_OUT(PWM_OUT)//,   // 실제 DC 모터 드라이버 핀에 연결
+    //     // .PWM_OUT_LED(led[0]) // LED로 속도 확인
+    // );
+
+    // // 방향은 정회전 고정
+    // assign in1_in2 = 2'b01;
+
+
+    // [신규] 에어컨 제어 모듈
+    aircon_control u_aircon_logic (
+        .clk(clk),
+        .reset(reset),
+        .btn_up(w_clean_btn[3]),   // Up 버튼
+        .btn_down(w_clean_btn[4]), // Down 버튼
+        .curr_temp(w_temp),        // DHT11에서 받은 현재 온도
+        .set_temp(w_set_temp),     // 설정 온도 출력
+        .motor_speed(w_motor_speed)// 계산된 모터 속도
+    );
+
+    // [기존] 모터 출력부
     pwm_duty_control u_pwm_ctrl (
         .clk(clk),
         .reset(reset),
         .auto_duty_in(w_motor_speed),
-        // .DUTY_CYCLE(),
-        .PWM_OUT(PWM_OUT)//,   // 실제 DC 모터 드라이버 핀에 연결
-        // .PWM_OUT_LED(led[0]) // LED로 속도 확인
+        .PWM_OUT(PWM_OUT)
     );
-
-    // 방향은 정회전 고정
     assign in1_in2 = 2'b01;
-
-
 
 
 
