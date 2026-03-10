@@ -96,6 +96,7 @@ read_verilog -library xil_defaultlib {
   D:/PROJECT/RTL/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.srcs/sources_1/new/dht11_controller.v
   D:/PROJECT/RTL/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.srcs/sources_1/imports/uart_rx/ds1302_rtc.v
   D:/PROJECT/RTL/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.srcs/sources_1/new/fnd_controller.v
+  D:/PROJECT/RTL/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.srcs/sources_1/imports/new/pwm_duty_control.v
   D:/PROJECT/RTL/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.srcs/sources_1/imports/uart_rx/rotary_time_setter.v
   D:/PROJECT/RTL/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.srcs/sources_1/imports/uart_rx/rtc_command_parser.v
   D:/PROJECT/RTL/BASYS3_Smart_Air_Conditioner/17.smart_air_conditioner/17.smart_air_conditioner.srcs/sources_1/imports/uart_rx/rtc_display.v

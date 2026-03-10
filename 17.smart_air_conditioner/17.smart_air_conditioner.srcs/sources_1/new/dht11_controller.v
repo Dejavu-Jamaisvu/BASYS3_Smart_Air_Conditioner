@@ -100,7 +100,7 @@ always @(posedge clk or posedge reset) begin
                 if (timer >= 1000) begin state <= IDLE; error <= 1; end 
             end 
             else if (data_in == 0 && timer > 0) begin
-                // [수정] 판별 기준을 45us로 상향 (데이터 튐 방지)
+                // [수정] 판별 기준을 50us로 상향 (데이터 튐 방지)
                 if (timer > 45) data_shift <= {data_shift[38:0], 1'b1};
                 else data_shift <= {data_shift[38:0], 1'b0};
 
@@ -110,10 +110,27 @@ always @(posedge clk or posedge reset) begin
             end
         end
 
+        // DONE: begin
+        //     humidity <= data_shift[39:32];
+        //     temperature <= data_shift[23:16];
+        //     data_valid <= 1;
+        //     state <= IDLE;
+        // end
         DONE: begin
-            humidity <= data_shift[39:32];
-            temperature <= data_shift[23:16];
-            data_valid <= 1;
+            // 체크섬 계산 (8비트 합산 시 하위 8비트만 비교되도록 처리)
+            if ((data_shift[39:32] + data_shift[31:24] + data_shift[23:16] + data_shift[15:8]) == data_shift[7:0]) begin
+                // 체크섬 일치 시 데이터 업데이트
+                humidity    <= data_shift[39:32];
+                temperature <= data_shift[23:16];
+                data_valid  <= 1'b1;
+                error       <= 1'b0;
+            end 
+            else begin
+                // 체크섬 불일치 시 에러 처리 안하고 그냥 둠...
+                data_valid  <= 1'b0;
+                error       <= 1'b0; 
+            end
+            
             state <= IDLE;
         end
         endcase

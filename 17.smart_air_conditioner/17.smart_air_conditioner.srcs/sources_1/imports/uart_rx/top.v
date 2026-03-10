@@ -23,6 +23,9 @@ module top(
 
     output buzzer_out,
 
+    output PWM_OUT,
+    output [1:0] in1_in2,
+
     output [7:0] seg,
     output [3:0] an,
     output [15:0] led,
@@ -161,22 +164,29 @@ module top(
         .error(w_dht_error)  // [수정] 에러 신호 연결
     );
 
-    // UART 트리거 로직 수정
+    // UART 트리거 로직
     reg dht_valid_prev, dht_error_prev;
-    wire w_uart_trigger;
+    reg dht_done_pulse;
 
     always @(posedge clk or posedge reset) begin
         if (reset) begin
             dht_valid_prev <= 1'b0;
             dht_error_prev <= 1'b0;
+            dht_done_pulse <= 1'b0;
         end else begin
+            // 1. 이전 상태를 항상 기록 
             dht_valid_prev <= w_dht_valid;
             dht_error_prev <= w_dht_error;
+
+            // 2. Rising Edge 검출: 이전엔 0이었는데 지금 1이 된 순간에만 1클럭 펄스 발생
+            if ((w_dht_valid && !dht_valid_prev) || (w_dht_error && !dht_error_prev))
+                dht_done_pulse <= 1'b1;
+            else
+                dht_done_pulse <= 1'b0;
         end
     end
 
-    // [수정] 데이터가 정상이거나(valid), 에러가 발생했을 때(error) 모두 UART 전송을 시작함
-    assign w_uart_trigger = (w_dht_valid && !dht_valid_prev) || (w_dht_error && !dht_error_prev);
+    assign w_uart_trigger = dht_done_pulse;
 
     uart_controller u_uart_controller(
         .clk(clk),
@@ -340,6 +350,40 @@ module top(
         .tick(w_tick_1s)
     );
 
+    // wire w_tick_10s;
+    // tick_generator #(.TICK_Hz(0.1)) u_tick_10s (  // 0.1Hz = 10초에 한 번
+    //     .clk(clk),
+    //     .reset(reset),
+    //     .tick(w_tick_10s)
+    // );
+
+
+    // top.v 내부 logic
+    wire [3:0] w_motor_speed;
+
+    // 요청하신 조건: 10도(70%), 20도(80%), 30도(90%)
+    assign w_motor_speed = (w_temp >= 30) ? 4'd9 : 
+                        (w_temp >= 20) ? 4'd8 : 
+                        (w_temp >= 10) ? 4'd7 : 
+                                            4'd0;
+
+    // 모터 컨트롤러 인스턴스
+    pwm_duty_control u_pwm_ctrl (
+        .clk(clk),
+        .reset(reset),
+        .auto_duty_in(w_motor_speed),
+        // .DUTY_CYCLE(),
+        .PWM_OUT(PWM_OUT)//,   // 실제 DC 모터 드라이버 핀에 연결
+        // .PWM_OUT_LED(led[0]) // LED로 속도 확인
+    );
+
+    // 방향은 정회전 고정
+    assign in1_in2 = 2'b01;
+
+
+
+
+
     assign uartTx = RsTx;
     assign uartRx = RsRx;
 
@@ -360,6 +404,9 @@ module top(
         else if (w_dht_valid)
             led_valid_toggle <= ~led_valid_toggle;
     end
+
+
+    
 
     assign led[15] = led_valid_toggle;
     assign led[14] = led_toggle;

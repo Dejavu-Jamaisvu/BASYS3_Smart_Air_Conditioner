@@ -153,6 +153,15 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
+      <File Path="$PSRCDIR/sources_1/imports/new/pwm_duty_control.v">
+        <FileInfo>
+          <Attr Name="ImportPath" Val="$PPRDIR/../../../../AI_System_Semiconductor_SW/project/FPGA/AI1/12.pwm_dcmotor/12.pwm_dcmotor.srcs/sources_1/new/pwm_duty_control.v"/>
+          <Attr Name="ImportTime" Val="1772084167"/>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
       <File Path="$PSRCDIR/sources_1/imports/uart_rx/rotary_time_setter.v">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
