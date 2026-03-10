@@ -55,7 +55,7 @@ always @(posedge clk or posedge reset) begin
         case(state)
         IDLE: begin
             if(start) begin
-                data_valid <= 0; error <= 0; // [수정] 새 측정 시작 시 에러 초기화
+                data_valid <= 0; error <= 0; //새 측정 시작 시 에러 초기화
                 state <= START_LOW; timer <= 0;
                 data_dir <= 1; data_out <= 0;
             end
@@ -74,7 +74,7 @@ always @(posedge clk or posedge reset) begin
             if(timer >= 30) begin timer <= 0; state <= WAIT_RESP_LOW; end
         end
 
-        // [수정] 각 응답 대기 상태에 3초 타임아웃 로직 적용
+        // 각 응답 대기 상태에 3초 타임아웃 로직 적용
         WAIT_RESP_LOW: begin
             if(tick_1us) timer <= timer + 1;
             if(data_in == 0) begin state <= WAIT_RESP_HIGH; timer <= 0; end
@@ -96,11 +96,10 @@ always @(posedge clk or posedge reset) begin
         READ_DATA: begin
             if (data_in == 1) begin
                 if (tick_1us) timer <= timer + 1;
-                // [수정] 비트 하나가 1ms(1000us) 이상 High일 수 없으므로 안전장치 추가
+                // 비트 하나가 1ms(1000us) 이상 High일 수 없으므로 안전장치 추가
                 if (timer >= 1000) begin state <= IDLE; error <= 1; end 
             end 
             else if (data_in == 0 && timer > 0) begin
-                // [수정] 판별 기준을 50us로 상향 (데이터 튐 방지)
                 if (timer > 45) data_shift <= {data_shift[38:0], 1'b1};
                 else data_shift <= {data_shift[38:0], 1'b0};
 

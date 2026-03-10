@@ -12,7 +12,7 @@ module data_sender(
     output reg [7:0] tx_data
     );
 
-    // [수정] 상태 번호 100번대 사용을 위해 7비트로 확장
+    // 상태 번호 100번대 사용을 위해 7비트로 확장
     reg [6:0] state; 
 
     // ASCII 변환 로직
