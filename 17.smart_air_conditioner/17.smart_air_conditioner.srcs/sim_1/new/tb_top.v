@@ -1,3 +1,4 @@
+// 시간 축약 테스트 아직 못해봄
 `timescale 1ns / 1ps
 
 module tb_top();
@@ -27,9 +28,10 @@ module tb_top();
         .seg(seg), .an(an)
     );
 
+    // 10MHz 클럭 생성 (기존과 동일)
     always #5 clk = ~clk;
 
-    // DHT11 데이터 전송 Task
+    // --- DHT11 데이터 전송 Task (빠른 시뮬레이션용) ---
     task send_dht11_packet;
         input [7:0] h_int, t_int;
         integer i;
@@ -37,14 +39,14 @@ module tb_top();
         begin
             full_data = {h_int, 8'd0, t_int, 8'd0, (h_int + t_int)};
             dht_drive_reg = 1;
-            dht_model_out = 0; #80000; // Response Low
-            dht_model_out = 1; #80000; // Response High
+            dht_model_out = 0; #80; // Response Low (압축)
+            dht_model_out = 1; #80; // Response High (압축)
             for (i=39; i>=0; i=i-1) begin
-                dht_model_out = 0; #50000; 
+                dht_model_out = 0; #50;
                 dht_model_out = 1;
-                if (full_data[i]) #70000; else #27000;
+                if (full_data[i]) #70; else #27; // 압축
             end
-            dht_model_out = 0; #50000;
+            dht_model_out = 0; #50;
             dht_drive_reg = 0;
         end
     endtask
@@ -54,58 +56,165 @@ module tb_top();
         clk = 0; reset = 1; btn = 0; sw = 0; RsRx = 1;
         dht_drive_reg = 0; dht_model_out = 1;
         #200 reset = 0;
-        #1000000;
+        #1000; // 대기 시간 축소
 
-        // --- 2. 모드 전환 (btn[0]: 시계 -> 온습도) ---
+        // --- 2. 모드 전환 (btn[0]) ---
         $display("--- Step 1: Mode Switch to DHT11 ---");
-        btn[0] = 1; #20000000; btn[0] = 0; 
-        #50000000;
+        btn[0] = 1; #200; btn[0] = 0;
+        #500; // 대기 축소
 
         // --- 3. SW[0] 진입 (온도 설정 모드 활성화) ---
         $display("--- Step 2: Enter Temp Set Mode (sw[0]=1) ---");
         sw[0] = 1; 
-        #20000000;
+        #200;
 
-        // --- 4. 예외 처리 테스트 (FAIL 상황 먼저 확인) ---
-        $display("--- Step 3: Testing FAIL Exception (No Sensor Response) ---");
-        // FPGA가 데이터 요청(Low)을 보낼 때까지 대기
+        // --- 4. 예외 처리 테스트 (FAIL 상황 확인) ---
+        $display("--- Step 3: Testing FAIL Exception ---");
         wait(dht_data == 0); 
-        // 여기서 응답(send_dht11_packet)을 주지 않고 타임아웃까지 기다림
         wait(uut.w_dht_error == 1); 
-        $display(">>> SUCCESS: FAIL Detected on FND/UART!");
-        #100000000; // 에러 상태 관찰
+        $display(">>> SUCCESS: FAIL Detected!");
+
+        #1000; // 에러 상태 관찰 대기 축소
 
         // --- 5. 정상 데이터 주입 및 온습도 확인 ---
         $display("--- Step 4: Injecting Normal Data (30C) ---");
-        // 다음 읽기 주기에 데이터를 주입하여 에러가 해제되는지 확인
-        wait(dht_data == 0); wait(dht_data == 1); #20000;
+        wait(dht_data == 0); wait(dht_data == 1); #20;
         send_dht11_packet(8'd60, 8'd30); 
-        #50000000;
+        #500;
         $display(">>> Normal Data Received: Temp=%d", uut.w_temp);
 
         // --- 6. 온도 조절 및 팬 속도 확인 ---
-        $display("--- Step 5: Lowering Temp (25 -> 22) and Check Fan ---");
-        // 현재 온도 30도, 설정 온도 25도 (차이 5) -> 22도(차이 8)로 하강
-        repeat(3) begin
-            btn[4] = 1; #20000000; // 20ms 누름
-            btn[4] = 0; #80000000; // 80ms 대기
-            $display("SetTemp: %d, Diff: %d, Speed: %d", 
-                      uut.u_aircon_control.r_set_temp, 
-                      (uut.w_temp - uut.u_aircon_control.r_set_temp),
-                      uut.u_aircon_control.motor_speed);
-        end
+        $display("--- Step 5: Raising Temp (25 -> 30) ---");
+        // btn[3] = 1; #200; btn[3] = 0; #500;
+				repeat(5) begin          // 5회 반복 유지
+				    btn[3] = 1; #200;    // 버튼 누름 200ns
+				    btn[3] = 0; #500;    // 버튼 떼고 잠시 대기
+				end
 
-        // --- 7. 온도 다시 올리기 확인 ---
-        $display("--- Step 6: Raising Temp (22 -> 24) ---");
-        repeat(2) begin
-            btn[3] = 1; #20000000;
-            btn[3] = 0; #80000000;
-        end
+        $display("--- Step 6: Lowering Temp (30 -> 29) and Check Fan ---");
+        btn[4] = 1; #200; btn[4] = 0; #500;
+        $display("SetTemp: %d, Diff: %d, Speed: %d", 
+                  uut.u_aircon_control.r_set_temp, 
+                  (uut.w_temp - uut.u_aircon_control.r_set_temp),
+                  uut.u_aircon_control.motor_speed);
 
-        #100000000;
+        #1000;
         $finish;
     end
-endmodule`timescale 1ns / 1ps
+endmodule
+
+
+// 잘나오는데 오래걸림
+// `timescale 1ns / 1ps
+
+// module tb_top();
+//     reg clk;
+//     reg reset;
+//     reg [4:0] btn;
+//     reg [7:0] sw;
+//     reg RsRx;
+
+//     wire dht_data;
+//     reg dht_drive_reg;
+//     reg dht_model_out;
+//     assign dht_data = dht_drive_reg ? dht_model_out : 1'bz;
+
+//     wire PWM_OUT;
+//     wire [1:0] in1_in2;
+//     wire [7:0] seg;
+//     wire [3:0] an;
+
+//     top uut (
+//         .clk(clk), .reset(reset),
+//         .btn(btn), .sw(sw),
+//         .RsRx(RsRx),
+//         .dht_data(dht_data),
+//         .PWM_OUT(PWM_OUT),
+//         .in1_in2(in1_in2),
+//         .seg(seg), .an(an)
+//     );
+
+//     always #5 clk = ~clk;
+
+//     // DHT11 데이터 전송 Task
+//     task send_dht11_packet;
+//         input [7:0] h_int, t_int;
+//         integer i;
+//         reg [39:0] full_data;
+//         begin
+//             full_data = {h_int, 8'd0, t_int, 8'd0, (h_int + t_int)};
+//             dht_drive_reg = 1;
+//             dht_model_out = 0; #80000; // Response Low
+//             dht_model_out = 1; #80000; // Response High
+//             for (i=39; i>=0; i=i-1) begin
+//                 dht_model_out = 0; #50000; 
+//                 dht_model_out = 1;
+//                 if (full_data[i]) #70000; else #27000;
+//             end
+//             dht_model_out = 0; #50000;
+//             dht_drive_reg = 0;
+//         end
+//     endtask
+
+//     initial begin
+//         // --- 1. 초기화 ---
+//         clk = 0; reset = 1; btn = 0; sw = 0; RsRx = 1;
+//         dht_drive_reg = 0; dht_model_out = 1;
+//         #200 reset = 0;
+//         #1000000;
+
+//         // --- 2. 모드 전환 (btn[0]: 시계 -> 온습도) ---
+//         $display("--- Step 1: Mode Switch to DHT11 ---");
+//         btn[0] = 1; #20000000; btn[0] = 0; 
+//         #50000000;
+
+//         // --- 3. SW[0] 진입 (온도 설정 모드 활성화) ---
+//         $display("--- Step 2: Enter Temp Set Mode (sw[0]=1) ---");
+//         sw[0] = 1; 
+//         #20000000;
+
+//         // --- 4. 예외 처리 테스트 (FAIL 상황 먼저 확인) ---
+//         $display("--- Step 3: Testing FAIL Exception (No Sensor Response) ---");
+//         // FPGA가 데이터 요청(Low)을 보낼 때까지 대기
+//         wait(dht_data == 0); 
+//         // 여기서 응답(send_dht11_packet)을 주지 않고 타임아웃까지 기다림
+//         wait(uut.w_dht_error == 1); 
+//         $display(">>> SUCCESS: FAIL Detected on FND/UART!");
+//         #100000000; // 에러 상태 관찰
+
+//         // --- 5. 정상 데이터 주입 및 온습도 확인 ---
+//         $display("--- Step 4: Injecting Normal Data (30C) ---");
+//         // 다음 읽기 주기에 데이터를 주입하여 에러가 해제되는지 확인
+//         wait(dht_data == 0); wait(dht_data == 1); #20000;
+//         send_dht11_packet(8'd60, 8'd30); 
+//         #50000000;
+//         $display(">>> Normal Data Received: Temp=%d", uut.w_temp);
+
+
+
+//         // --- 6. 온도 조절 및 팬 속도 확인 ---
+//         $display("--- Step 5: Raising Temp (25 -> 30) ---");
+//         repeat(5) begin
+//             btn[3] = 1; #20000000;
+//             btn[3] = 0; #80000000;
+//         end
+
+
+//         $display("--- Step 6: Lowering Temp (30 -> 28) and Check Fan ---");
+//         repeat(3) begin
+//             btn[4] = 1; #20000000; // 20ms 누름
+//             btn[4] = 0; #80000000; // 80ms 대기
+//             $display("SetTemp: %d, Diff: %d, Speed: %d", 
+//                       uut.u_aircon_control.r_set_temp, 
+//                       (uut.w_temp - uut.u_aircon_control.r_set_temp),
+//                       uut.u_aircon_control.motor_speed);
+//         end
+
+
+//         #100000000;
+//         $finish;
+//     end
+// endmodule
 
 
 // `timescale 1ns / 1ps
